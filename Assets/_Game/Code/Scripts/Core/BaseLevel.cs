@@ -16,11 +16,6 @@ namespace VinhLB
         [SerializeField]
         protected Config _config;
 
-        protected virtual void Awake()
-        {
-            
-        }
-
         protected virtual void Start()
         {
             _config.cameraRotationController.ResetRotation(true);

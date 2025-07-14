@@ -304,11 +304,6 @@ namespace VinhLB.Utilities
 
             return layerMask;
         }
-
-        public static bool ContainsLayer(LayerMask mask, int layer)
-        {
-            return (mask.value & (1 << layer)) != 0;
-        }
     }
 
     public static class VLBPhysics
