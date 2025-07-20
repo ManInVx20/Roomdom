@@ -8,8 +8,9 @@ namespace VinhLB
         [Serializable]
         protected class Config
         {
-            public CameraRotationController cameraRotationController;
-            public CameraZoomController cameraZoomController;
+            public CameraRotationController CameraRotationController;
+            public CameraZoomController CameraZoomController;
+            public ItemSlotFactory ItemSlotFactory;
         }
 
         [Header("Base Settings")]
@@ -18,11 +19,13 @@ namespace VinhLB
 
         protected virtual void Start()
         {
-            _config.cameraRotationController.ResetRotation(true);
-            _config.cameraRotationController.SetControl(true, true);
+            _config.CameraRotationController.ResetRotation(true);
+            _config.CameraRotationController.SetControl(true, true);
 
-            _config.cameraZoomController.ResetZoom(true);
-            _config.cameraZoomController.SetControl(true, true);
+            _config.CameraZoomController.ResetZoom(true);
+            _config.CameraZoomController.SetControl(true, true);
+
+            _config.ItemSlotFactory.Initialize();
         }
     }
 }
