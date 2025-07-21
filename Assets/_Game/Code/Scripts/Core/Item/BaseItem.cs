@@ -1,8 +1,4 @@
-using System;
-using DG.Tweening;
-using EPOOutline;
 using UnityEngine;
-using VinhLB.Utilities;
 
 namespace VinhLB
 {
@@ -10,31 +6,24 @@ namespace VinhLB
     {
         [Header("Base Settings")]
         [SerializeField]
-        private TargetSlot _targetSlot;
-        [SerializeField]
-        private Outlinable _outlinable;
+        private BaseSlot _currentSlot;
 
-        public TargetSlot TargetSlot
+        public BaseSlot CurrentSlot
         {
-            get => _targetSlot;
-            set => _targetSlot = value;
+            get => _currentSlot;
+            set => _currentSlot = value;
         }
-        public Outlinable Outlinable => _outlinable;
         public bool IsInteractable { get; set; } = true;
         public ItemSlotFactory Factory { get; private set; }
 
         public virtual void Initialize(ItemSlotFactory factory)
         {
             Factory = factory;
-            
-            // _outlinable.enabled = false;
         }
 
         public virtual void Interact()
         {
             Debug.Log($"{gameObject.name} is interacted");
-
-            IsInteractable = false;
         }
     }
 }

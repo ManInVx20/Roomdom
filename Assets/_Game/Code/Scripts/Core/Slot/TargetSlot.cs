@@ -7,6 +7,8 @@ namespace VinhLB
     {
         [Header("Specific Settings")]
         [SerializeField]
+        private MeshFilter _iconMeshFilter;
+        [SerializeField]
         private Image _checkmarkImage;
 
         public override void Initialize()
@@ -16,11 +18,28 @@ namespace VinhLB
             _checkmarkImage.gameObject.SetActive(false);
         }
 
-        public override void Finish()
+        public override void SetFullState(bool value)
         {
-            base.Finish();
+            base.SetFullState(value);
 
-            _checkmarkImage.gameObject.SetActive(true);
+            _checkmarkImage.gameObject.SetActive(value);
+        }
+
+        public void Initialize(RoomItem item)
+        {
+            Initialize();
+
+            if (item != null)
+            {
+                MeshRenderer mainMeshRenderer = item.GetMainRenderer();
+                if (mainMeshRenderer != null)
+                {
+                    _iconMeshFilter.mesh = mainMeshRenderer.GetComponent<MeshFilter>()?.mesh;
+
+                    IconTf.localEulerAngles = item.FinalEulerAngles;
+                    IconTf.localScale = item.GetFinalScale(mainMeshRenderer);
+                }
+            }
         }
     }
 }
