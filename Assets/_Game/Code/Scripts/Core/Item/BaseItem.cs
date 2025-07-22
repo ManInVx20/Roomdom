@@ -23,7 +23,7 @@ namespace VinhLB
 
         public virtual void Interact()
         {
-            Debug.Log($"{gameObject.name} is interacted");
+            // Debug.Log($"{gameObject.name} is interacted");
         }
     }
 }

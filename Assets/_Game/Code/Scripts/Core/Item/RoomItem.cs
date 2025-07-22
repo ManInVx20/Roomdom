@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using EPOOutline;
 using UnityEngine;
@@ -24,18 +25,19 @@ namespace VinhLB
         [SerializeField]
         private Vector3 _finalEulerAngles = Vector3.zero;
 
-        private const float SIZE_FACTOR = 75f;
+        private const float SIZE_FACTOR = 74f;
 
         private Tween _shakingTween;
 
-        public event System.Action Clicked;
-        public event System.Action ReachedSlot;
+        public event System.Action<RoomItem> Clicked;
+        public event System.Action<RoomItem> ReachedSlot;
 
         public TargetSlot TargetSlot
         {
             get => _targetSlot;
             set => _targetSlot = value;
         }
+        public RoomItem[] DependentItems => _dependentItems;
         public Outlinable Outlinable => _outlinable;
         public Vector3 FinalEulerAngles => _finalEulerAngles;
 
@@ -59,7 +61,7 @@ namespace VinhLB
                 IsInteractable = true;
             }
 
-            Clicked?.Invoke();
+            Clicked?.Invoke(this);
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -97,6 +99,7 @@ namespace VinhLB
                 sequence.Append(transform.DOMoveY(transform.position.y + _pickUpOffset, 0.375f)
                     .SetEase(Ease.OutSine));
             }
+
             sequence.AppendCallback(() =>
             {
                 transform.SetParent(slot.transform, true);
@@ -104,7 +107,6 @@ namespace VinhLB
 
                 // _outlinable.enabled = false;
             });
-            
             float duration = 0.375f;
             Vector3 targetScale = Vector3.one;
             if (!fromWorld)
@@ -112,7 +114,7 @@ namespace VinhLB
                 targetScale = transform.localScale;
                 sequence.Append(transform.DOScale(targetScale * 1.2f, duration)
                     .SetEase(Ease.OutSine));
-                sequence.Join(transform.DOLocalMoveZ(transform.localPosition.z - 100f, duration)
+                sequence.Join(transform.DOLocalMoveZ(transform.localPosition.z - 400f, duration)
                     .SetEase(Ease.OutSine));
             }
 
@@ -133,13 +135,16 @@ namespace VinhLB
             {
                 slot.SetFullState(true);
 
-                ReachedSlot?.Invoke();
+                ReachedSlot?.Invoke(this);
             });
         }
 
         public Vector3 GetFinalScale(MeshRenderer mainMeshRenderer)
         {
-            return transform.localScale * SIZE_FACTOR / mainMeshRenderer.bounds.size.y;
+            Vector3 finalSize = Quaternion.Euler(_finalEulerAngles) * mainMeshRenderer.bounds.size;
+            float maxValue = Mathf.Max(Mathf.Abs(finalSize.x), Mathf.Abs(finalSize.y), Mathf.Abs(finalSize.z));
+
+            return transform.localScale * SIZE_FACTOR / maxValue;
         }
 
         public MeshRenderer GetMainRenderer()
@@ -153,7 +158,7 @@ namespace VinhLB
                 }
                 else
                 {
-                    if (_meshRenderers[i].bounds.size.y > mainMeshRenderer.bounds.size.y)
+                    if (_meshRenderers[i].bounds.size.sqrMagnitude > mainMeshRenderer.bounds.size.sqrMagnitude)
                     {
                         mainMeshRenderer = _meshRenderers[i];
                     }

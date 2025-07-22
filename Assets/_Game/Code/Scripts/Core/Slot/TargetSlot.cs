@@ -32,9 +32,10 @@ namespace VinhLB
             if (item != null)
             {
                 MeshRenderer mainMeshRenderer = item.GetMainRenderer();
+                // Debug.Log($"{item.name} | {mainMeshRenderer}");
                 if (mainMeshRenderer != null)
                 {
-                    _iconMeshFilter.mesh = mainMeshRenderer.GetComponent<MeshFilter>()?.mesh;
+                    _iconMeshFilter.sharedMesh = mainMeshRenderer.GetComponent<MeshFilter>()?.sharedMesh;
 
                     IconTf.localEulerAngles = item.FinalEulerAngles;
                     IconTf.localScale = item.GetFinalScale(mainMeshRenderer);

@@ -87,8 +87,8 @@ namespace VinhLB
                     {
                         InUse = true;
 
-                        _pitch += -deltaPosition.y * _rotationSpeed * Time.deltaTime;
-                        _yaw += deltaPosition.x * _rotationSpeed * Time.deltaTime;
+                        _pitch += -deltaPosition.y * _rotationSpeed;
+                        _yaw += deltaPosition.x * _rotationSpeed;
 
                         _pitch = Mathf.Clamp(_pitch, _bottomAngleLimit, _topAngleLimit);
 

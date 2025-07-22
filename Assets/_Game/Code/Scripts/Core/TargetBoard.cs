@@ -9,8 +9,6 @@ namespace VinhLB
         private Transform _lockTf;
         [SerializeField]
         private Transform _targetSlotHolderTf;
-        [SerializeField]
-        private TargetSlot _targetSlotPrefab;
 
         private bool _isLocked;
 
@@ -22,15 +20,28 @@ namespace VinhLB
             set => SetLocked(value);
         }
 
-        public void Initialize(int numSlotToSpawn)
+        public void Initialize(TargetSlot targetSlotPrefab, int numSlotToSpawn)
         {
             TargetSlotList = new List<TargetSlot>();
             for (int i = 0; i < numSlotToSpawn; i++)
             {
-                TargetSlot slot = Instantiate(_targetSlotPrefab, _targetSlotHolderTf);
+                TargetSlot slot = Instantiate(targetSlotPrefab, _targetSlotHolderTf);
 
                 TargetSlotList.Add(slot);
             }
+        }
+
+        public bool IsAllSlotsFull()
+        {
+            for (int i = 0; i < TargetSlotList.Count; i++)
+            {
+                if (!TargetSlotList[i].IsFull)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private void SetLocked(bool value)

@@ -102,7 +102,7 @@ namespace VinhLB
                     float prevMagnitude = (touchZeroPrevPos - touchOnePrevPos).magnitude;
                     float currentMagnitude = (touchZero.position - touchOne.position).magnitude;
 
-                    _difference = (currentMagnitude - prevMagnitude) * 0.01f;
+                    _difference = (currentMagnitude - prevMagnitude) * 0.05f;
                 }
                 else
                 {
@@ -136,7 +136,7 @@ namespace VinhLB
                 return;
             }
 
-            float newZoomSize = _currentZoomSize + _difference * _zoomSpeed * Time.deltaTime;
+            float newZoomSize = _currentZoomSize + _difference * _zoomSpeed;
             _currentZoomSize = Mathf.Clamp(newZoomSize, MinManualZoomSize, MaxManualZoomSize);
 
             _cameraScaler.CameraZoom =

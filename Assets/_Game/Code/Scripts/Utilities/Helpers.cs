@@ -23,7 +23,7 @@ namespace VinhLB.Utilities
                     ? RunMode.Editor
                     : RunMode.Simulator;
 #else
-                return ApplicationRunMode.Device;
+                return RunMode.Device;
 #endif
             }
         }
@@ -104,7 +104,7 @@ namespace VinhLB.Utilities
                     deltaPosition = Input.GetTouch(touchIndex).deltaPosition;
                     deltaPosition.x /= Screen.width;
                     deltaPosition.y /= Screen.height;
-                    deltaPosition *= 40f;
+                    deltaPosition *= 100f;
                 }
             }
 

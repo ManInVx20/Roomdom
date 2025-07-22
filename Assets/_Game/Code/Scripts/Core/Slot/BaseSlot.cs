@@ -19,8 +19,8 @@ namespace VinhLB
         }
         public Transform IconTf => _iconTf;
         public bool IsLocked { get; set; }
+        public bool IsFull { get; private set; }
         public bool IsAvailable => !IsLocked && CurrentItem == null;
-        public bool IsFull => !IsLocked && CurrentItem != null;
 
         public virtual void Initialize()
         {
@@ -30,6 +30,8 @@ namespace VinhLB
         public virtual void SetFullState(bool value)
         {
             _iconTf.gameObject.SetActive(!value);
+            
+            IsFull = value;
         }
     }
 }
