@@ -1,4 +1,3 @@
-using System;
 using DG.Tweening;
 using EPOOutline;
 using UnityEngine;
@@ -11,34 +10,40 @@ namespace VinhLB
     {
         [Header("Specific Settings")]
         [SerializeField]
-        private TargetSlot _targetSlot;
+        private TargetSlot[] _targetSlots;
         [SerializeField]
         private RoomItem[] _dependentItems;
+
+        [Space]
         [SerializeField]
         private MeshRenderer[] _meshRenderers;
         [SerializeField]
         private Collider[] _colliders;
         [SerializeField]
+        private Transform _modelTf;
+        [SerializeField]
         private Outlinable _outlinable;
+        [SerializeField]
+        private Animator _inPlaceAnimator;
+
+        [Space]
         [SerializeField]
         private float _pickUpOffset = 1f;
         [SerializeField]
         private Vector3 _finalEulerAngles = Vector3.zero;
 
-        private const float SIZE_FACTOR = 74f;
+        private const float SIZE_FACTOR = 100f;
 
         private Tween _shakingTween;
 
         public event System.Action<RoomItem> Clicked;
         public event System.Action<RoomItem> ReachedSlot;
 
-        public TargetSlot TargetSlot
-        {
-            get => _targetSlot;
-            set => _targetSlot = value;
-        }
+        public TargetSlot[] TargetSlots => _targetSlots;
         public RoomItem[] DependentItems => _dependentItems;
+        public Transform ModelTf => _modelTf;
         public Outlinable Outlinable => _outlinable;
+        public Animator InPlaceAnimator => _inPlaceAnimator;
         public Vector3 FinalEulerAngles => _finalEulerAngles;
 
         public override void Initialize(ItemSlotFactory factory)
@@ -74,23 +79,10 @@ namespace VinhLB
             Interact();
         }
 
-        public void Initialize(ItemSlotFactory factory, TargetSlot targetSlot)
-        {
-            Initialize(factory);
-
-            _targetSlot = targetSlot;
-        }
-
-        [ContextMenu(nameof(CollectComponents))]
-        public void CollectComponents()
-        {
-            _meshRenderers = transform.GetComponentsInChildren<MeshRenderer>();
-            _colliders = transform.GetComponentsInChildren<Collider>();
-            _outlinable = transform.GetComponentInChildren<Outlinable>();
-        }
-
         public void MoveToSlot(BaseSlot slot, bool fromWorld)
         {
+            _modelTf.gameObject.SetLayerInChildren(VLBLayer.Default);
+
             // _outlinable.enabled = true;
 
             Sequence sequence = DOTween.Sequence();
@@ -103,7 +95,7 @@ namespace VinhLB
             sequence.AppendCallback(() =>
             {
                 transform.SetParent(slot.transform, true);
-                gameObject.layer = VLBLayer.GameUI;
+                _modelTf.gameObject.SetLayerInChildren(VLBLayer.GameUI);
 
                 // _outlinable.enabled = false;
             });
@@ -168,6 +160,28 @@ namespace VinhLB
             return mainMeshRenderer;
         }
 
+        public void SetTargetSlots(TargetSlot[] targetSlots)
+        {
+            _targetSlots = targetSlots;
+        }
+
+        public bool TryGetAvailableTargetSlot(out TargetSlot targetSlot)
+        {
+            for (int i = 0; i < _targetSlots.Length; i++)
+            {
+                if (_targetSlots[i] != null && _targetSlots[i].IsAvailable)
+                {
+                    targetSlot = _targetSlots[i];
+
+                    return true;
+                }
+            }
+
+            targetSlot = null;
+            
+            return false;
+        }
+
         private bool CanClick()
         {
             return IsInteractable && !VLBInput.IsPointerOnUI();
@@ -192,5 +206,16 @@ namespace VinhLB
 
             _shakingTween = transform.DOShakePosition(0.5f, 0.05f, 50);
         }
+
+#if UNITY_EDITOR
+        [ContextMenu(nameof(CollectComponents))]
+        public void CollectComponents()
+        {
+            _meshRenderers = transform.GetComponentsInChildren<MeshRenderer>();
+            _colliders = transform.GetComponentsInChildren<Collider>();
+            _modelTf = transform.GetChild(0);
+            _outlinable = transform.GetComponentInChildren<Outlinable>();
+        }
+#endif
     }
 }

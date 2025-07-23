@@ -78,43 +78,28 @@ namespace VinhLB
             {
                 if (VLBInput.IsPointerActive() && (VLBApplication.IsOnEditor() || Input.touchCount == 1))
                 {
-                    Vector2 deltaPosition = VLBInput.GetPointerDeltaPosition();
-                    if (Vector2.Distance(deltaPosition, Vector2.zero) < 0.1f)
+                    SetInUse(true);
+
+                    Vector2 deltaPosition = deltaPosition = VLBInput.GetPointerDeltaPosition();
+
+                    _pitch += -deltaPosition.y * _rotationSpeed;
+                    _yaw += deltaPosition.x * _rotationSpeed;
+
+                    _pitch = Mathf.Clamp(_pitch, _bottomAngleLimit, _topAngleLimit);
+
+                    while (_yaw < 0)
                     {
-                        InUse = false;
+                        _yaw += 360f;
                     }
-                    else
+
+                    while (_yaw >= 360f)
                     {
-                        InUse = true;
-
-                        _pitch += -deltaPosition.y * _rotationSpeed;
-                        _yaw += deltaPosition.x * _rotationSpeed;
-
-                        _pitch = Mathf.Clamp(_pitch, _bottomAngleLimit, _topAngleLimit);
-
-                        while (_yaw < 0)
-                        {
-                            _yaw += 360f;
-                        }
-
-                        while (_yaw >= 360f)
-                        {
-                            _yaw -= 360f;
-                        }
-
-                        // if (_leftAngleLimit > _rightAngleLimit)
-                        // {
-                        //     _yaw = Mathf.Clamp(_yaw, _rightAngleLimit, _leftAngleLimit);
-                        // }
-                        // else
-                        // {
-                        //     _yaw = Mathf.Clamp(_yaw, _leftAngleLimit, _rightAngleLimit);
-                        // }
+                        _yaw -= 360f;
                     }
                 }
                 else
                 {
-                    InUse = false;
+                    SetInUse(false);
                 }
             }
             else
@@ -140,9 +125,14 @@ namespace VinhLB
 
         public void SetControl(bool value, bool keepUpdating)
         {
+            if (IsControllable == value)
+            {
+                return;
+            }
+
             SetControl(value);
 
-            InUse = false;
+            SetInUse(value);
 
             _canUpdate = keepUpdating;
 

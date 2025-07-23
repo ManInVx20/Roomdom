@@ -1,6 +1,6 @@
 namespace VinhLB
 {
-    public class LevelTest : BaseLevel
+    public class LevelTest2 : BaseLevel
     {
         
     }

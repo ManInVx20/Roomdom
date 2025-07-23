@@ -87,35 +87,31 @@ namespace VinhLB
 
             if (_canGetInput)
             {
-                if (VLBApplication.IsOnEditor())
+                if ((VLBApplication.IsOnEditor() && Input.mouseScrollDelta != Vector2.zero) || Input.touchCount == 2)
                 {
-                    _difference = Input.mouseScrollDelta.y;
-                }
-                else if (Input.touchCount == 2)
-                {
-                    Touch touchZero = Input.GetTouch(0);
-                    Touch touchOne = Input.GetTouch(1);
+                    SetInUse(true);
 
-                    Vector2 touchZeroPrevPos = touchZero.position - touchZero.deltaPosition;
-                    Vector2 touchOnePrevPos = touchOne.position - touchOne.deltaPosition;
+                    if (VLBApplication.IsOnEditor())
+                    {
+                        _difference = Input.mouseScrollDelta.y;
+                    }
+                    else
+                    {
+                        Touch touchZero = Input.GetTouch(0);
+                        Touch touchOne = Input.GetTouch(1);
 
-                    float prevMagnitude = (touchZeroPrevPos - touchOnePrevPos).magnitude;
-                    float currentMagnitude = (touchZero.position - touchOne.position).magnitude;
+                        Vector2 touchZeroPrevPos = touchZero.position - touchZero.deltaPosition;
+                        Vector2 touchOnePrevPos = touchOne.position - touchOne.deltaPosition;
 
-                    _difference = (currentMagnitude - prevMagnitude) * 0.05f;
-                }
-                else
-                {
-                    _difference = 0;
-                }
+                        float prevMagnitude = (touchZeroPrevPos - touchOnePrevPos).magnitude;
+                        float currentMagnitude = (touchZero.position - touchOne.position).magnitude;
 
-                if (!Mathf.Approximately(_difference, 0))
-                {
-                    InUse = true;
+                        _difference = (currentMagnitude - prevMagnitude) * 0.05f;
+                    }
                 }
                 else
                 {
-                    InUse = false;
+                    SetInUse(false);
 
                     _difference = 0;
                 }
@@ -145,9 +141,14 @@ namespace VinhLB
 
         public void SetControl(bool value, bool keepUpdating)
         {
+            if (IsControllable == value)
+            {
+                return;
+            }
+
             SetControl(value);
 
-            InUse = false;
+            SetInUse(value);
 
             _canUpdate = keepUpdating;
 

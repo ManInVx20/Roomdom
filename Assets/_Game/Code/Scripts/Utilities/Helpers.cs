@@ -271,7 +271,7 @@ namespace VinhLB.Utilities
         // public static readonly int Draggable = LayerMask.NameToLayer("Draggable");
         // public static readonly int Slot = LayerMask.NameToLayer("Slot");
         // public static readonly int Wall = LayerMask.NameToLayer("Wall");
-        // public static readonly int Interactable = LayerMask.NameToLayer("Interactable");
+        public static readonly int Interactable = LayerMask.NameToLayer("Interactable");
 
         public static LayerMask GetLayerMask(int layer)
         {

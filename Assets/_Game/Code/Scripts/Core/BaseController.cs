@@ -4,12 +4,34 @@ namespace VinhLB
 {
     public abstract class BaseController : MonoBehaviour
     {
-        public bool IsControllable { get; protected set; } = true;
-        public bool InUse { get; protected set; } = false;
+        public event System.Action<BaseController> StartedInUse;
+        public event System.Action<BaseController> EndedInUse;
+
+        public bool IsControllable { get; private set; } = true;
+        public bool InUse { get; private set; } = false;
 
         public virtual void SetControl(bool value)
         {
             IsControllable = value;
+        }
+
+        public virtual void SetInUse(bool value)
+        {
+            if (InUse == value)
+            {
+                return;
+            }
+
+            InUse = value;
+
+            if (value)
+            {
+                StartedInUse?.Invoke(this);
+            }
+            else
+            {
+                EndedInUse?.Invoke(this);
+            }
         }
 
         public static bool IsAnyControllerInUse(BaseController[] controllers)
