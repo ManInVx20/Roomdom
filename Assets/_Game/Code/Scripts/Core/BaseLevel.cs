@@ -15,6 +15,10 @@ namespace VinhLB
             public PhysicsRaycaster MainCameraPhysicsRaycaster;
 
             public ItemSlotFactory ItemSlotFactory;
+
+            public InGameView InGameView;
+
+            public bool HighFramerate;
         }
 
         [Header("Base Settings")]
@@ -25,7 +29,12 @@ namespace VinhLB
         {
             base.Awake();
 
-            Application.targetFrameRate = 60;
+            UpdateFramerate();
+        }
+
+        protected virtual void OnValidate()
+        {
+            UpdateFramerate();
         }
 
         protected virtual void Start()
@@ -35,6 +44,8 @@ namespace VinhLB
 
         private void Initialize()
         {
+            _config.InGameView.Initialize(_config.CameraZoomController);
+
             // _config.CameraRotationController.StartedInUse += CameraController_StartedInUse;
             // _config.CameraRotationController.EndedInUse += CameraController_EndedInUse;
             //
@@ -43,11 +54,24 @@ namespace VinhLB
 
             _config.CameraRotationController.ResetRotation(true);
             _config.CameraRotationController.SetControl(true, true);
+            _config.CameraRotationController.StartRotateAround();
 
             _config.CameraZoomController.ResetZoom(true);
             _config.CameraZoomController.SetControl(true, true);
 
             _config.ItemSlotFactory.Initialize();
+        }
+
+        private void UpdateFramerate()
+        {
+            if (!_config.HighFramerate)
+            {
+                Application.targetFrameRate = 60;
+            }
+            else
+            {
+                Application.targetFrameRate = 120;
+            }
         }
 
         private void CameraController_StartedInUse(BaseController controller)

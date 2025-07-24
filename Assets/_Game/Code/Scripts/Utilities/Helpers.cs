@@ -104,7 +104,7 @@ namespace VinhLB.Utilities
                     deltaPosition = Input.GetTouch(touchIndex).deltaPosition;
                     deltaPosition.x /= Screen.width;
                     deltaPosition.y /= Screen.height;
-                    deltaPosition *= 100f;
+                    deltaPosition *= 80f;
                 }
             }
 
@@ -158,6 +158,14 @@ namespace VinhLB.Utilities
             }
 
             return false;
+        }
+
+        public static bool IsMouseOutsideGameView()
+        {
+            Vector3 mousePosition = Input.mousePosition;
+
+            return (mousePosition.x < 0 || mousePosition.x >= Screen.width || 
+                    mousePosition.y < 0 || mousePosition.y >= Screen.height);
         }
 
         public static bool IsPointerActive()
@@ -267,7 +275,7 @@ namespace VinhLB.Utilities
         public static readonly int Default = LayerMask.NameToLayer("Default");
         public static readonly int IgnoreRaycast = LayerMask.NameToLayer("Ignore Raycast");
         public static readonly int UI = LayerMask.NameToLayer("UI");
-        public static readonly int GameUI = LayerMask.NameToLayer("GameUI");
+        public static readonly int InGameUI = LayerMask.NameToLayer("InGameUI");
         // public static readonly int Draggable = LayerMask.NameToLayer("Draggable");
         // public static readonly int Slot = LayerMask.NameToLayer("Slot");
         // public static readonly int Wall = LayerMask.NameToLayer("Wall");

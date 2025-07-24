@@ -1,3 +1,4 @@
+using System.Collections;
 using DG.Tweening;
 using UnityEngine;
 using VinhLB.Utilities;
@@ -36,21 +37,21 @@ namespace VinhLB
         // private float _leftAngleLimit = 105f;
         // [SerializeField]
         // private float _rightAngleLimit = -15f;
+        [SerializeField]
+        private float _rotateAroundDelay = 3f;
+        [SerializeField]
+        private float _rotateAroundAngle = 30f;
 
         private bool _canGetInput = true;
         private bool _canUpdate = true;
         private float _pitch;
         private float _yaw;
+        private Coroutine _rotateAroundCoroutine;
 
         public float StartAngleY
         {
             get => _startAngleY;
             set => _startAngleY = value;
-        }
-
-        private void Awake()
-        {
-            ResetRotation(true);
         }
 
         private void Update()
@@ -80,22 +81,13 @@ namespace VinhLB
                 {
                     SetInUse(true);
 
-                    Vector2 deltaPosition = deltaPosition = VLBInput.GetPointerDeltaPosition();
+                    Vector2 deltaPosition = VLBInput.GetPointerDeltaPosition();
 
                     _pitch += -deltaPosition.y * _rotationSpeed;
                     _yaw += deltaPosition.x * _rotationSpeed;
 
                     _pitch = Mathf.Clamp(_pitch, _bottomAngleLimit, _topAngleLimit);
-
-                    while (_yaw < 0)
-                    {
-                        _yaw += 360f;
-                    }
-
-                    while (_yaw >= 360f)
-                    {
-                        _yaw -= 360f;
-                    }
+                    _yaw = GetClampedYaw(_yaw);
                 }
                 else
                 {
@@ -118,9 +110,23 @@ namespace VinhLB
                 return;
             }
 
-            Vector3 targetEulerAngles = GetTargetEulerAngles(_pitch, _yaw);
-            transform.localRotation =
-                Quaternion.Lerp(transform.localRotation, Quaternion.Euler(targetEulerAngles), _smoothSpeed);
+            Quaternion targetRotation = Quaternion.Euler(GetTargetEulerAngles(_pitch, _yaw));
+            transform.localRotation = 
+                Quaternion.Lerp(transform.localRotation, targetRotation, _smoothSpeed * Time.deltaTime);
+        }
+
+        public override void SetInUse(bool value)
+        {
+            base.SetInUse(value);
+
+            if (!value)
+            {
+                StartRotateAround();
+            }
+            else
+            {
+                StopRotateAround();
+            }
         }
 
         public void SetControl(bool value, bool keepUpdating)
@@ -132,7 +138,10 @@ namespace VinhLB
 
             SetControl(value);
 
-            SetInUse(value);
+            if (!value)
+            {
+                SetInUse(false);
+            }
 
             _canUpdate = keepUpdating;
 
@@ -144,12 +153,49 @@ namespace VinhLB
             _blockLayer = layer;
         }
 
+        public void StartRotateAround()
+        {
+            if (_rotateAroundCoroutine != null)
+            {
+                return;
+            }
+
+            _rotateAroundCoroutine = StartCoroutine(RotateAroundCoroutine(_rotateAroundDelay));
+
+            return;
+
+            IEnumerator RotateAroundCoroutine(float delay)
+            {
+                yield return new WaitForSeconds(delay);
+
+                while (true)
+                {
+                    _yaw += _rotateAroundAngle * Time.deltaTime;
+                    _yaw = GetClampedYaw(_yaw);
+
+                    yield return null;
+                }
+            }
+        }
+
+        public void StopRotateAround()
+        {
+            if (_rotateAroundCoroutine == null)
+            {
+                return;
+            }
+
+            StopCoroutine(_rotateAroundCoroutine);
+
+            _rotateAroundCoroutine = null;
+        }
+
         public Tween ResetRotation(bool immediately, float duration = 1f, System.Action onComplete = null)
         {
             _pitch = _startAngleX;
             _yaw = _startAngleY;
-            Vector3 targetEulerAngles = GetTargetEulerAngles(_pitch, _yaw);
 
+            Vector3 targetEulerAngles = GetTargetEulerAngles(_pitch, _yaw);
             if (immediately)
             {
                 transform.localRotation = Quaternion.Euler(targetEulerAngles);
@@ -201,6 +247,21 @@ namespace VinhLB
         private Vector3 GetTargetEulerAngles(float angleX, float angleY)
         {
             return new Vector3(angleX, angleY, 0);
+        }
+
+        private float GetClampedYaw(float value)
+        {
+            while (value < 0)
+            {
+                value += 360f;
+            }
+
+            while (value >= 360f)
+            {
+                value -= 360f;
+            }
+
+            return value;
         }
     }
 }

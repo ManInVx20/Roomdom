@@ -31,7 +31,7 @@ namespace VinhLB
         [SerializeField]
         private RoomItem _roomItemPrefab;
         [SerializeField]
-        private Transform _roomTf;
+        private Transform _roomItemHolderTf;
         [SerializeField]
         private List<Transform> _modelRefList;
         [SerializeField]
@@ -380,7 +380,7 @@ namespace VinhLB
         {
             for (int i = 0; i < _modelRefList.Count; i++)
             {
-                RoomItem item = PrefabUtility.InstantiatePrefab(_roomItemPrefab, _roomTf) as RoomItem;
+                RoomItem item = PrefabUtility.InstantiatePrefab(_roomItemPrefab, _roomItemHolderTf) as RoomItem;
                 if (item == null)
                 {
                     continue;
@@ -398,6 +398,22 @@ namespace VinhLB
                 item.CollectComponents();
 
                 Undo.RegisterCreatedObjectUndo(item, "Create RoomItem");
+            }
+        }
+
+        [ContextMenu(nameof(DeleteItems))]
+        private void DeleteItems()
+        {
+            CollectItems();
+
+            while (_roomItemList.Count > 0)
+            {
+                if (_roomItemList[0] != null)
+                {
+                    Undo.DestroyObjectImmediate(_roomItemList[0].gameObject);
+                }
+
+                _roomItemList.RemoveAt(0);
             }
         }
 

@@ -14,6 +14,8 @@ namespace VinhLB
             Out
         }
 
+        public event System.Action<float> CurrentZoomSizeChanged;
+
         [SerializeField]
         private Camera _camera;
         [SerializeField]
@@ -87,7 +89,9 @@ namespace VinhLB
 
             if (_canGetInput)
             {
-                if ((VLBApplication.IsOnEditor() && Input.mouseScrollDelta != Vector2.zero) || Input.touchCount == 2)
+                if ((VLBApplication.IsOnEditor() && 
+                     !VLBInput.IsMouseOutsideGameView()) && 
+                    Input.mouseScrollDelta != Vector2.zero || Input.touchCount == 2)
                 {
                     SetInUse(true);
 
@@ -106,14 +110,15 @@ namespace VinhLB
                         float prevMagnitude = (touchZeroPrevPos - touchOnePrevPos).magnitude;
                         float currentMagnitude = (touchZero.position - touchOne.position).magnitude;
 
-                        _difference = (currentMagnitude - prevMagnitude) * 0.05f;
+                        _difference = (currentMagnitude - prevMagnitude) * 0.02f;
                     }
+
+                    float newZoomSize = _currentZoomSize + _difference * _zoomSpeed;
+                    SetCurrentZoomSize(newZoomSize);
                 }
                 else
                 {
                     SetInUse(false);
-
-                    _difference = 0;
                 }
             }
             else
@@ -132,9 +137,6 @@ namespace VinhLB
                 return;
             }
 
-            float newZoomSize = _currentZoomSize + _difference * _zoomSpeed;
-            _currentZoomSize = Mathf.Clamp(newZoomSize, MinManualZoomSize, MaxManualZoomSize);
-
             _cameraScaler.CameraZoom =
                 Mathf.Lerp(_cameraScaler.CameraZoom, _currentZoomSize, _zoomSmoothness * Time.deltaTime);
         }
@@ -148,7 +150,10 @@ namespace VinhLB
 
             SetControl(value);
 
-            SetInUse(value);
+            if (!value)
+            {
+                SetInUse(false);
+            }
 
             _canUpdate = keepUpdating;
 
@@ -160,9 +165,19 @@ namespace VinhLB
             _blockLayer = layer;
         }
 
+        public void SetCurrentZoomSize(float value, bool triggerEvent = true)
+        {
+            _currentZoomSize = Mathf.Clamp(value, MinManualZoomSize, MaxManualZoomSize);
+
+            if (triggerEvent)
+            {
+                CurrentZoomSizeChanged?.Invoke(_currentZoomSize);
+            }
+        }
+
         public Tween ResetZoom(bool immediately, float duration = 1f, System.Action onComplete = null)
         {
-            _currentZoomSize = _startZoomSize;
+            SetCurrentZoomSize(_startZoomSize);
 
             if (immediately)
             {
@@ -184,10 +199,10 @@ namespace VinhLB
             switch (mode)
             {
                 case ZoomMode.In:
-                    _currentZoomSize = _maxZoomSize;
+                    SetCurrentZoomSize(_maxZoomSize);
                     break;
                 case ZoomMode.Out:
-                    _currentZoomSize = _minZoomSize;
+                    SetCurrentZoomSize(_minZoomSize);
                     break;
             }
 

@@ -6,7 +6,7 @@ using VinhLB.Utilities;
 
 namespace VinhLB
 {
-    public class RoomItem : BaseItem, IPointerClickHandler
+    public class RoomItem : BaseItem, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
     {
         [Header("Specific Settings")]
         [SerializeField]
@@ -32,8 +32,10 @@ namespace VinhLB
         [SerializeField]
         private Vector3 _finalEulerAngles = Vector3.zero;
 
+        private const float CLICK_SENSITIVITY = 10f;
         private const float SIZE_FACTOR = 100f;
 
+        private Vector2 _initialPointerPosition;
         private Tween _shakingTween;
 
         public event System.Action<RoomItem> Clicked;
@@ -69,8 +71,23 @@ namespace VinhLB
             Clicked?.Invoke(this);
         }
 
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            _initialPointerPosition = eventData.position;
+        }
+
+        public void OnPointerUp(PointerEventData eventData)
+        {
+            float distance = Vector2.Distance(eventData.position, _initialPointerPosition);
+            // Debug.Log($"Item touch distance: {distance}");
+            // Debug.Log($"Touch count: {Input.touchCount}");
+            bool canClick = Input.touchCount == 1 && distance < CLICK_SENSITIVITY;
+            eventData.eligibleForClick = canClick;
+        }
+
         public void OnPointerClick(PointerEventData eventData)
         {
+            Debug.Log(eventData.eligibleForClick);
             if (!CanClick())
             {
                 return;
@@ -95,7 +112,7 @@ namespace VinhLB
             sequence.AppendCallback(() =>
             {
                 transform.SetParent(slot.transform, true);
-                _modelTf.gameObject.SetLayerInChildren(VLBLayer.GameUI);
+                _modelTf.gameObject.SetLayerInChildren(VLBLayer.InGameUI);
 
                 // _outlinable.enabled = false;
             });
