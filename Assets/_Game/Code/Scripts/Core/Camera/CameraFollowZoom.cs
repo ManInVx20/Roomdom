@@ -9,18 +9,11 @@ namespace VinhLB
         [SerializeField]
         private Camera _camera;
         [SerializeField]
-        private CameraScaler _cameraScaler;
-
-        private float _startZoomSize;
-
-        private void Awake()
-        {
-            _startZoomSize = _camera.orthographicSize;
-        }
+        private Camera _cameraToFollow;
 
         private void LateUpdate()
         {
-            _camera.orthographicSize = _startZoomSize / _cameraScaler.CameraZoom;
+            _camera.orthographicSize = _cameraToFollow.orthographicSize;
         }
     }
 }

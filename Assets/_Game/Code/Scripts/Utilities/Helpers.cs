@@ -30,7 +30,7 @@ namespace VinhLB.Utilities
 
         public static bool IsOnEditor()
         {
-            return CurrentRunMode is RunMode.Editor or RunMode.Simulator;
+            return CurrentRunMode is RunMode.Editor;
         }
     }
 

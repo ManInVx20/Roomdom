@@ -81,13 +81,12 @@ namespace VinhLB
             float distance = Vector2.Distance(eventData.position, _initialPointerPosition);
             // Debug.Log($"Item touch distance: {distance}");
             // Debug.Log($"Touch count: {Input.touchCount}");
-            bool canClick = Input.touchCount == 1 && distance < CLICK_SENSITIVITY;
+            bool canClick = (VLBApplication.IsOnEditor() || Input.touchCount == 1) && distance < CLICK_SENSITIVITY;
             eventData.eligibleForClick = canClick;
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            Debug.Log(eventData.eligibleForClick);
             if (!CanClick())
             {
                 return;
@@ -116,6 +115,7 @@ namespace VinhLB
 
                 // _outlinable.enabled = false;
             });
+
             float duration = 0.375f;
             Vector3 targetScale = Vector3.one;
             if (!fromWorld)
@@ -134,6 +134,7 @@ namespace VinhLB
             Vector3 targetEulerAngles = _finalEulerAngles;
             sequence.Join(transform.DOLocalRotate(targetEulerAngles, duration)
                 .SetEase(Ease.OutSine));
+
             if (fromWorld)
             {
                 targetScale = GetFinalScale(GetMainRenderer());
