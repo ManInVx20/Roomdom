@@ -315,7 +315,7 @@ GameObject:
   - component: {fileID: 4737440406785995043}
   - component: {fileID: 6868996456023910323}
   m_Layer: 6
-  m_Name: InGameView
+  m_Name: SafeArea
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

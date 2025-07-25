@@ -58,7 +58,7 @@ namespace VinhLB
             set => _maxZoomSize = value;
         }
         public float MinManualZoomSize => _minZoomSize * 0.75f;
-        public float MaxManualZoomSize => _maxZoomSize * 1.75f;
+        public float MaxManualZoomSize => _maxZoomSize * 1.25f;
 
         private void Update()
         {

@@ -37,7 +37,7 @@ namespace VinhLB
                 {
                     _iconMeshFilter.sharedMesh = mainMeshRenderer.GetComponent<MeshFilter>()?.sharedMesh;
 
-                    IconTf.localEulerAngles = item.FinalEulerAngles;
+                    IconTf.localEulerAngles = item.ModelFinalEulerAngles;
                     IconTf.localScale = item.GetFinalScale(mainMeshRenderer);
                 }
             }

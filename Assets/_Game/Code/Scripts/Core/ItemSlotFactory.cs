@@ -12,9 +12,15 @@ namespace VinhLB
     public class ItemSlotFactory : MonoBehaviour
     {
         [System.Serializable]
-        private class SimilarShapeData
+        private class RoomItemConfig
         {
-            public RoomItem[] Items;
+            public List<RoomItem> ItemList;
+        }
+
+        [System.Serializable]
+        private class SimilarItemConfig
+        {
+            public List<RoomItem> ItemList;
         }
 
         [Header("Settings")]
@@ -34,22 +40,29 @@ namespace VinhLB
         private Transform _roomItemHolderTf;
         [SerializeField]
         private List<Transform> _modelRefList;
+
+        [Space]
         [SerializeField]
-        private List<RoomItem> _roomItemList;
+        private List<RoomItemConfig> _roomItemConfigList;
         [SerializeField]
-        private List<SimilarShapeData> _similarShapeDataList;
+        private List<SimilarItemConfig> _similarItemConfigList;
 
         private const int MAX_SLOTS_PER_BOARD = 3;
-        private const int SLOTS_TO_SHOW = 2;
+        // private const int SLOTS_TO_SHOW = 2;
         private const int SLOTS_TO_UNLOCK = 2;
 
         private List<TargetBoard> _targetBoardList;
         private int _firstLockedTargetBoardIndex;
-        private int _secondLockedTargetBoardIndex;
+        // private int _secondLockedTargetBoardIndex;
 
         public void Initialize()
         {
-            List<RoomItem> randomRoomItemList = new(_roomItemList);
+            List<RoomItem> randomRoomItemList = new();
+            for (int i = 0; i < _roomItemConfigList.Count; i++)
+            {
+                randomRoomItemList.AddRange(_roomItemConfigList[i].ItemList);
+            }
+
             int numBoardsToSpawn = randomRoomItemList.Count / MAX_SLOTS_PER_BOARD;
             int leftOverItems = randomRoomItemList.Count - numBoardsToSpawn * MAX_SLOTS_PER_BOARD;
 
@@ -60,8 +73,8 @@ namespace VinhLB
                 SpawnAndInitializeSlotsAndItems(1, leftOverItems);
             }
 
-            SetupSimilarShapeData();
-            
+            SetupSimilarItemConfig();
+
             for (int i = 0; i < _queueSlotList.Count; i++)
             {
                 _queueSlotList[i].Initialize();
@@ -125,19 +138,19 @@ namespace VinhLB
             return false;
         }
 
-        private void SetupSimilarShapeData()
+        private void SetupSimilarItemConfig()
         {
-            for (int i = 0; i < _similarShapeDataList.Count; i++)
+            for (int i = 0; i < _similarItemConfigList.Count; i++)
             {
                 List<TargetSlot> targetSlotList = new();
-                for (int j = 0; j < _similarShapeDataList[i].Items.Length; j++)
+                for (int j = 0; j < _similarItemConfigList[i].ItemList.Count; j++)
                 {
-                    targetSlotList.Add(_similarShapeDataList[i].Items[j].TargetSlots[0]);
+                    targetSlotList.Add(_similarItemConfigList[i].ItemList[j].TargetSlots[0]);
                 }
                 
-                for (int j = 0; j < _similarShapeDataList[i].Items.Length; j++)
+                for (int j = 0; j < _similarItemConfigList[i].ItemList.Count; j++)
                 {
-                    _similarShapeDataList[i].Items[j].SetTargetSlots(targetSlotList.ToArray());
+                    _similarItemConfigList[i].ItemList[j].SetTargetSlots(targetSlotList.ToArray());
                 }
             }
         }
@@ -147,11 +160,11 @@ namespace VinhLB
             for (int i = 0; i < _targetBoardList.Count; i++)
             {
                 _targetBoardList[i].IsLocked = i >= SLOTS_TO_UNLOCK;
-                _targetBoardList[i].gameObject.SetActive(i < SLOTS_TO_SHOW);
+                _targetBoardList[i].gameObject.SetActive(i < SLOTS_TO_UNLOCK);
             }
 
             _firstLockedTargetBoardIndex = SLOTS_TO_UNLOCK;
-            _secondLockedTargetBoardIndex = SLOTS_TO_SHOW;
+            // _secondLockedTargetBoardIndex = SLOTS_TO_SHOW;
         }
 
         private bool TryGetAvailableQueueSlot(out QueueSlot queueSlot)
@@ -175,7 +188,7 @@ namespace VinhLB
         {
             for (int i = 0; i < _queueSlotList.Count; i++)
             {
-                if (_queueSlotList[i].IsAvailable)
+                if (!_queueSlotList[i].IsFull)
                 {
                     continue;
                 }
@@ -216,37 +229,42 @@ namespace VinhLB
 
             Sequence sequence = DOTween.Sequence();
             sequence.AppendInterval(1f);
-            sequence.AppendCallback(() => { board.gameObject.SetActive(false); });
+            sequence.AppendCallback(() =>
+            {
+                board.gameObject.SetActive(false);
+            });
 
             if (_firstLockedTargetBoardIndex < _targetBoardList.Count)
             {
-                TargetBoard nextUnlockedBoard = _targetBoardList[_firstLockedTargetBoardIndex];
-                TargetBoard nextVisibleLockedBoard = null;
-                if (_secondLockedTargetBoardIndex > _firstLockedTargetBoardIndex
-                    && _secondLockedTargetBoardIndex < _targetBoardList.Count)
-                {
-                    nextVisibleLockedBoard = _targetBoardList[_secondLockedTargetBoardIndex];
+                int nextUnlockedBoardIndex = _firstLockedTargetBoardIndex;
+                TargetBoard nextUnlockedBoard = _targetBoardList[nextUnlockedBoardIndex];
+                // TargetBoard nextVisibleLockedBoard = null;
+                // if (_secondLockedTargetBoardIndex > _firstLockedTargetBoardIndex
+                //     && _secondLockedTargetBoardIndex < _targetBoardList.Count)
+                // {
+                //     nextVisibleLockedBoard = _targetBoardList[_secondLockedTargetBoardIndex];
+                //
+                //     _secondLockedTargetBoardIndex += 1;
+                // }
 
-                    _secondLockedTargetBoardIndex += 1;
-                }
+                (_targetBoardList[index], _targetBoardList[nextUnlockedBoardIndex]) = 
+                    (_targetBoardList[nextUnlockedBoardIndex], _targetBoardList[index]);
 
                 _firstLockedTargetBoardIndex += 1;
 
                 sequence.AppendCallback(() =>
                 {
-                    // (_targetBoardList[index], _targetBoardList[_firstLockedTargetBoardIndex]) = 
-                    //     (_targetBoardList[_firstLockedTargetBoardIndex], _targetBoardList[index]);
-                    //
-                    // _targetBoardList[_firstLockedTargetBoardIndex].transform.SetSiblingIndex(_firstLockedTargetBoardIndex);
-                    // _targetBoardList[index].transform.SetSiblingIndex(index);
-                    //
-                    // _targetBoardList[index].gameObject.SetActive(true);
+                    board.transform.SetSiblingIndex(nextUnlockedBoardIndex);
+                    nextUnlockedBoard.transform.SetSiblingIndex(index);
 
                     nextUnlockedBoard.gameObject.SetActive(true);
-                    nextVisibleLockedBoard?.gameObject.SetActive(true);
+                    // nextVisibleLockedBoard?.gameObject.SetActive(true);
                 });
                 sequence.AppendInterval(0.5f);
-                sequence.AppendCallback(() => { nextUnlockedBoard.IsLocked = false; });
+                sequence.AppendCallback(() =>
+                {
+                    nextUnlockedBoard.IsLocked = false;
+                });
                 sequence.AppendInterval(0.5f);
                 sequence.OnComplete(MoveQueueItemsToTargetSlots);
             }
@@ -404,29 +422,41 @@ namespace VinhLB
         [ContextMenu(nameof(DeleteItems))]
         private void DeleteItems()
         {
-            CollectItems();
+            CollectItemsForFirstConfig();
 
-            while (_roomItemList.Count > 0)
+            while (_roomItemConfigList[0].ItemList.Count > 0)
             {
-                if (_roomItemList[0] != null)
+                if (_roomItemConfigList[0].ItemList[0] != null)
                 {
-                    Undo.DestroyObjectImmediate(_roomItemList[0].gameObject);
+                    Undo.DestroyObjectImmediate(_roomItemConfigList[0].ItemList[0]);
                 }
 
-                _roomItemList.RemoveAt(0);
+                _roomItemConfigList[0].ItemList.RemoveAt(0);
             }
+
+            _roomItemConfigList.Clear();
         }
 
-        [ContextMenu(nameof(CollectItems))]
-        private void CollectItems()
+        [ContextMenu(nameof(CollectItemsForFirstConfig))]
+        private void CollectItemsForFirstConfig()
         {
-            _roomItemList = FindObjectsByType<RoomItem>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).ToList();
+            _roomItemConfigList.Clear();
+
+            RoomItemConfig riConfig = new()
+            {
+                ItemList = FindObjectsByType<RoomItem>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).ToList()
+            };
+
+            _roomItemConfigList.Add(riConfig);
         }
 
         [ContextMenu(nameof(SortItems))]
         private void SortItems()
         {
-            _roomItemList = GetSortedItemListByDependentDepth(_roomItemList);
+            for (int i = 0; i < _roomItemConfigList.Count; i++)
+            {
+                _roomItemConfigList[i].ItemList = GetSortedItemListByDependentDepth(_roomItemConfigList[i].ItemList);
+            }
         }
 
         [ContextMenu(nameof(ShowModelRefs))]

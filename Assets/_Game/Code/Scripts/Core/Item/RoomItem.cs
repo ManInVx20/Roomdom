@@ -33,7 +33,7 @@ namespace VinhLB
         private Vector3 _finalEulerAngles = Vector3.zero;
 
         private const float CLICK_SENSITIVITY = 10f;
-        private const float SIZE_FACTOR = 100f;
+        private const float SIZE_FACTOR = 120f;
 
         private Vector2 _initialPointerPosition;
         private Tween _shakingTween;
@@ -46,13 +46,27 @@ namespace VinhLB
         public Transform ModelTf => _modelTf;
         public Outlinable Outlinable => _outlinable;
         public Animator InPlaceAnimator => _inPlaceAnimator;
-        public Vector3 FinalEulerAngles => _finalEulerAngles;
+        public Vector3 ModelFinalEulerAngles
+        {
+            get
+            {
+                Transform mainModelTf = GetMainRenderer()?.transform;
+                if (mainModelTf == null)
+                {
+                    return _finalEulerAngles;
+                }
+
+                return _finalEulerAngles + mainModelTf.localEulerAngles;
+            }
+        }
 
         public override void Initialize(ItemSlotFactory factory)
         {
             base.Initialize(factory);
 
             // _outlinable.enabled = false;
+
+            SetInPlaceAnim(true);
         }
 
         public override void Interact()
@@ -66,6 +80,10 @@ namespace VinhLB
                 PlayShakingAnim();
 
                 IsInteractable = true;
+            }
+            else
+            {
+                SetInPlaceAnim(false);
             }
 
             Clicked?.Invoke(this);
@@ -198,6 +216,21 @@ namespace VinhLB
             targetSlot = null;
             
             return false;
+        }
+
+        private void SetInPlaceAnim(bool enable)
+        {
+            if (_inPlaceAnimator == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < _meshRenderers.Length; i++)
+            {
+                _meshRenderers[i].enabled = !enable;
+            }
+
+            _inPlaceAnimator.gameObject.SetActive(enable);
         }
 
         private bool CanClick()

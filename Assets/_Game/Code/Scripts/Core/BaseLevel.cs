@@ -16,14 +16,14 @@ namespace VinhLB
 
             public ItemSlotFactory ItemSlotFactory;
 
-            public InGameView InGameView;
-
             public bool HighFramerate;
         }
 
         [Header("Base Settings")]
         [SerializeField]
         protected Config _config;
+        [SerializeField]
+        protected AutoHideItem[] _autoHideItems;
 
         protected override void Awake()
         {
@@ -44,7 +44,7 @@ namespace VinhLB
 
         private void Initialize()
         {
-            _config.InGameView.Initialize(_config.CameraZoomController);
+            UIManager.Instance.GetScreen<InGameScreen>().Initialize(_config.CameraZoomController);
 
             // _config.CameraRotationController.StartedInUse += CameraController_StartedInUse;
             // _config.CameraRotationController.EndedInUse += CameraController_EndedInUse;
@@ -60,6 +60,8 @@ namespace VinhLB
             _config.CameraZoomController.SetControl(true, true);
 
             _config.ItemSlotFactory.Initialize();
+
+            SetupAutoHideItems();
         }
 
         private void UpdateFramerate()
@@ -71,6 +73,14 @@ namespace VinhLB
             else
             {
                 Application.targetFrameRate = 120;
+            }
+        }
+
+        private void SetupAutoHideItems()
+        {
+            for (int i = 0; i < _autoHideItems.Length; i++)
+            {
+                _autoHideItems[i].Initialize();
             }
         }
 

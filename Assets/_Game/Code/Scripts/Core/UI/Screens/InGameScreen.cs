@@ -1,10 +1,9 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace VinhLB
 {
-    public class InGameView : MonoBehaviour
+    public class InGameScreen : UIScreen
     {
         [SerializeField]
         private Slider _zoomSlider;
@@ -20,6 +19,8 @@ namespace VinhLB
 
         public void Initialize(CameraZoomController cameraZoomController)
         {
+            Initialize();
+
             _cameraZoomController = cameraZoomController;
 
             _zoomSlider.minValue = _cameraZoomController.MinManualZoomSize;
