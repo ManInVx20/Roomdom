@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using VinhLB.Utilities;
@@ -7,7 +6,7 @@ namespace VinhLB
 {
     public abstract class BaseLevel : MonoSingleton<BaseLevel>
     {
-        [Serializable]
+        [System.Serializable]
         protected class Config
         {
             public CameraRotationController CameraRotationController;
@@ -60,6 +59,8 @@ namespace VinhLB
             _config.CameraZoomController.SetControl(true, true);
 
             _config.ItemSlotFactory.Initialize();
+            _config.ItemSlotFactory.RunOutOfQueueSlot += () => GameOver(false);
+            _config.ItemSlotFactory.HadAllTargetSlotsFull += () => GameOver(true);
 
             SetupAutoHideItems();
         }
@@ -82,6 +83,13 @@ namespace VinhLB
             {
                 _autoHideItems[i].Initialize();
             }
+        }
+
+        private void GameOver(bool won)
+        {
+            GameOverScreen gameOverScreen = UIManager.Instance.GetScreen<GameOverScreen>();
+            gameOverScreen.Initialize(won);
+            gameOverScreen.Show();
         }
 
         private void CameraController_StartedInUse(BaseController controller)

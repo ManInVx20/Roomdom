@@ -159,9 +159,16 @@ namespace VinhLB
             }
             sequence.Join(transform.DOScale(targetScale, duration)
                 .SetEase(Ease.OutSine));
+
+            int slotAvailableSpaces = slot.AvailableSpaces;
             sequence.OnComplete(() =>
             {
-                slot.SetFullState(true);
+                if (slot is TargetSlot)
+                {
+                    gameObject.SetActive(false);
+                }
+
+                slot.UpdateFullState(slotAvailableSpaces, true);
 
                 ReachedSlot?.Invoke(this);
             });

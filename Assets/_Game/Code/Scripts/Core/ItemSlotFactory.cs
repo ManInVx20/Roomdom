@@ -47,13 +47,16 @@ namespace VinhLB
         [SerializeField]
         private List<SimilarItemConfig> _similarItemConfigList;
 
-        private const int MAX_SLOTS_PER_BOARD = 3;
+        private const int MAX_SLOTS_PER_BOARD = 1;
         // private const int SLOTS_TO_SHOW = 2;
         private const int SLOTS_TO_UNLOCK = 2;
 
-        private List<TargetBoard> _targetBoardList;
+        private List<TargetBoard> _targetBoardList = new();
         private int _firstLockedTargetBoardIndex;
         // private int _secondLockedTargetBoardIndex;
+
+        public event System.Action RunOutOfQueueSlot;
+        public event System.Action HadAllTargetSlotsFull;
 
         public void Initialize()
         {
@@ -63,17 +66,46 @@ namespace VinhLB
                 randomRoomItemList.AddRange(_roomItemConfigList[i].ItemList);
             }
 
-            int numBoardsToSpawn = randomRoomItemList.Count / MAX_SLOTS_PER_BOARD;
-            int leftOverItems = randomRoomItemList.Count - numBoardsToSpawn * MAX_SLOTS_PER_BOARD;
-
-            _targetBoardList = new List<TargetBoard>();
-            SpawnAndInitializeSlotsAndItems(numBoardsToSpawn, MAX_SLOTS_PER_BOARD);
-            if (leftOverItems > 0)
+            while (randomRoomItemList.Count > 0)
             {
-                SpawnAndInitializeSlotsAndItems(1, leftOverItems);
+                int maxSlots = randomRoomItemList.Count / MAX_SLOTS_PER_BOARD > 0 
+                    ? MAX_SLOTS_PER_BOARD
+                    : randomRoomItemList.Count % MAX_SLOTS_PER_BOARD;
+
+                TargetBoard board = Instantiate(_targetBoardPrefab, _targetBoardHolderTf);
+                board.Initialize(_targetSlotPrefab, maxSlots);
+
+                for (int i = 0; i < maxSlots; i++)
+                {
+                    if (TryGetSimilarItemConfig(randomRoomItemList[0], out SimilarItemConfig config))
+                    {
+                        board.TargetSlotList[i].Initialize(randomRoomItemList[0], config.ItemList.Count);
+
+                        for (int j = 0; j < config.ItemList.Count; j++)
+                        {
+                            config.ItemList[j].Initialize(this);
+                            config.ItemList[j].SetTargetSlots(new TargetSlot[] { board.TargetSlotList[i] });
+
+                            randomRoomItemList.Remove(config.ItemList[j]);
+                        }
+                    }
+                    else
+                    {
+                        board.TargetSlotList[i].Initialize(randomRoomItemList[0], 1);
+
+                        randomRoomItemList[0].Initialize(this);
+                        randomRoomItemList[0].SetTargetSlots(new TargetSlot[] { board.TargetSlotList[i] });
+
+                        randomRoomItemList.RemoveAt(0);
+                    }
+                }
+
+                board.IsLocked = true;
+
+                _targetBoardList.Add(board);
             }
 
-            SetupSimilarItemConfig();
+            // SetupSimilarItemConfig();
 
             for (int i = 0; i < _queueSlotList.Count; i++)
             {
@@ -81,40 +113,19 @@ namespace VinhLB
             }
 
             SetupTargetBoards();
-
-            return;
-
-            void SpawnAndInitializeSlotsAndItems(int numBoards, int maxSlots)
-            {
-                for (int i = 0; i < numBoards; i++)
-                {
-                    TargetBoard board = Instantiate(_targetBoardPrefab, _targetBoardHolderTf);
-
-                    board.Initialize(_targetSlotPrefab, maxSlots);
-
-                    for (int j = 0; j < board.TargetSlotList.Count; j++)
-                    {
-                        board.TargetSlotList[j].Initialize(randomRoomItemList[0]);
-
-                        randomRoomItemList[0].Initialize(this);
-                        randomRoomItemList[0].SetTargetSlots(new TargetSlot[] { board.TargetSlotList[j] });
-
-                        randomRoomItemList.RemoveAt(0);
-                    }
-
-                    board.IsLocked = true;
-
-                    _targetBoardList.Add(board);
-                }
-            }
         }
 
         public bool TryMoveItemToSuitableSlot(RoomItem item)
         {
+            if (!IsAnyQueueSlotAvailable())
+            {
+                return false;
+            }
+
             if (item.TryGetAvailableTargetSlot(out TargetSlot targetSlot))
             {
                 item.CurrentSlot = targetSlot;
-                targetSlot.CurrentItem = item;
+                targetSlot.AddItem(item);
 
                 item.ReachedSlot += CheckUnlockedTargetBoard;
                 item.MoveToSlot(targetSlot, true);
@@ -125,15 +136,13 @@ namespace VinhLB
             if (TryGetAvailableQueueSlot(out QueueSlot queueSlot))
             {
                 item.CurrentSlot = queueSlot;
-                queueSlot.CurrentItem = item;
+                queueSlot.AddItem(item);
 
-                item.ReachedSlot += MoveQueueItemToTargetSlot;
+                item.ReachedSlot += CheckAvailableQueueSlot;
                 item.MoveToSlot(queueSlot, true);
 
                 return true;
             }
-
-            Debug.Log("No slot is available");
 
             return false;
         }
@@ -167,6 +176,36 @@ namespace VinhLB
             // _secondLockedTargetBoardIndex = SLOTS_TO_SHOW;
         }
 
+        private bool TryGetSimilarItemConfig(RoomItem item, out SimilarItemConfig config)
+        {
+            for (int i = 0; i < _similarItemConfigList.Count; i++)
+            {
+                if (_similarItemConfigList[i].ItemList.Contains(item))
+                {
+                    config = _similarItemConfigList[i];
+
+                    return true;
+                }
+            }
+
+            config = null;
+
+            return false;
+        }
+
+        private bool IsAnyQueueSlotAvailable()
+        {
+            for (int i = 0; i < _queueSlotList.Count; i++)
+            {
+                if (_queueSlotList[i].IsAvailable)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private bool TryGetAvailableQueueSlot(out QueueSlot queueSlot)
         {
             queueSlot = null;
@@ -193,7 +232,7 @@ namespace VinhLB
                     continue;
                 }
 
-                RoomItem queueRoomItem = _queueSlotList[i].CurrentItem as RoomItem;
+                RoomItem queueRoomItem = _queueSlotList[i].CurrentItemList[0] as RoomItem;
                 if (queueRoomItem == null)
                 {
                     continue;
@@ -207,22 +246,38 @@ namespace VinhLB
         {
             if (item.TryGetAvailableTargetSlot(out TargetSlot targetSlot))
             {
-                item.CurrentSlot.CurrentItem = null;
-                item.CurrentSlot.SetFullState(false);
+                item.CurrentSlot.RemoveItem(item);
+                item.CurrentSlot.UpdateFullState(item.CurrentSlot.AvailableSpaces, true);
 
                 item.CurrentSlot = targetSlot;
-                targetSlot.CurrentItem = item;
+                targetSlot.AddItem(item);
 
-                item.ReachedSlot -= MoveQueueItemToTargetSlot;
                 item.ReachedSlot += CheckUnlockedTargetBoard;
                 item.MoveToSlot(targetSlot, false);
             }
         }
 
+        private void CheckAvailableQueueSlot(RoomItem item)
+        {
+            item.ReachedSlot -= CheckAvailableQueueSlot;
+
+            if (IsAnyQueueSlotAvailable())
+            {
+                MoveQueueItemToTargetSlot(item);
+            }
+            else
+            {
+                // Debug.Log("No available queue slot");
+                RunOutOfQueueSlot?.Invoke();
+            }
+        }
+
         private void CheckUnlockedTargetBoard(RoomItem item)
         {
+            item.ReachedSlot -= CheckUnlockedTargetBoard;
+
             TargetBoard board = GetTargetBoard((TargetSlot)item.CurrentSlot, out int index);
-            if (!board.IsAllSlotsFull())
+            if (!board.AreAllSlotsFull())
             {
                 return;
             }
@@ -268,9 +323,13 @@ namespace VinhLB
                 sequence.AppendInterval(0.5f);
                 sequence.OnComplete(MoveQueueItemsToTargetSlots);
             }
-            else if (IsAllTargetSlotsFull())
+            else if (AreAllTargetSlotsFull())
             {
-                sequence.OnComplete(() => { Debug.Log("End"); });
+                sequence.OnComplete(() =>
+                {
+                    // Debug.Log("End");
+                    HadAllTargetSlotsFull?.Invoke();
+                });
             }
         }
 
@@ -296,11 +355,11 @@ namespace VinhLB
             return null;
         }
 
-        private bool IsAllTargetSlotsFull()
+        private bool AreAllTargetSlotsFull()
         {
             for (int i = 0; i < _targetBoardList.Count; i++)
             {
-                if (!_targetBoardList[i].IsAllSlotsFull())
+                if (!_targetBoardList[i].AreAllSlotsFull())
                 {
                     return false;
                 }

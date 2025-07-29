@@ -16,14 +16,23 @@ namespace VinhLB
                 {
                     _canvas = GetComponent<Canvas>();
                 }
-                
+
                 return _canvas;
             }
         }
 
         public virtual void Initialize()
         {
-            
+        }
+
+        public virtual void Show()
+        {
+            gameObject.SetActive(true);
+        }
+
+        public virtual void Hide()
+        {
+            gameObject.SetActive(false);
         }
     }
 }

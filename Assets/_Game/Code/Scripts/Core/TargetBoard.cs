@@ -31,7 +31,7 @@ namespace VinhLB
             }
         }
 
-        public bool IsAllSlotsFull()
+        public bool AreAllSlotsFull()
         {
             for (int i = 0; i < TargetSlotList.Count; i++)
             {

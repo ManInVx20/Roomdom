@@ -23,8 +23,8 @@ namespace VinhLB
 
             _cameraZoomController = cameraZoomController;
 
-            _zoomSlider.minValue = _cameraZoomController.MinManualZoomSize;
-            _zoomSlider.maxValue = _cameraZoomController.MaxManualZoomSize;
+            _zoomSlider.minValue = _cameraZoomController.MinZoomSize;
+            _zoomSlider.maxValue = _cameraZoomController.MaxZoomSize;
 
             _zoomSlider.onValueChanged.AddListener(ZoomSlider_onValueChanged);
 

@@ -21,7 +21,7 @@ namespace VinhLB
                 }
             }
 
-            T screen = _rootCanvas.GetComponentInChildren<T>();
+            T screen = _rootCanvas.GetComponentInChildren<T>(true);
             if (screen != null)
             {
                 _screenList.Add(screen);

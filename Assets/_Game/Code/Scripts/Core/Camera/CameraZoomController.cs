@@ -57,8 +57,6 @@ namespace VinhLB
             get => _maxZoomSize;
             set => _maxZoomSize = value;
         }
-        public float MinManualZoomSize => _minZoomSize * 0.75f;
-        public float MaxManualZoomSize => _maxZoomSize * 1.25f;
 
         private void Update()
         {
@@ -167,7 +165,7 @@ namespace VinhLB
 
         public void SetCurrentZoomSize(float value, bool triggerEvent = true)
         {
-            _currentZoomSize = Mathf.Clamp(value, MinManualZoomSize, MaxManualZoomSize);
+            _currentZoomSize = Mathf.Clamp(value, _minZoomSize, _maxZoomSize);
 
             if (triggerEvent)
             {
